@@ -1,6 +1,7 @@
 import express from "express"
 import dotenv from "dotenv"
 import connectDb from "./config/connectDb.js"
+import initDb from "./config/initDb.js"
 import cookieParser from "cookie-parser"
 dotenv.config()
 import cors from "cors"
@@ -11,7 +12,14 @@ import paymentRouter from "./routes/payment.route.js"
 
 const app = express()
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin: function(origin, callback) {
+        // Allow requests from localhost on any port (for development)
+        if (!origin || origin.startsWith("http://localhost")) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials:true
 }))
 
@@ -24,7 +32,8 @@ app.use("/api/interview" , interviewRouter)
 app.use("/api/payment" , paymentRouter)
 
 const PORT = process.env.PORT || 6000
-app.listen(PORT , ()=>{
+app.listen(PORT , async ()=>{
     console.log(`Server running on port ${PORT}`)
-    connectDb()
+    await connectDb()
+    await initDb()
 })

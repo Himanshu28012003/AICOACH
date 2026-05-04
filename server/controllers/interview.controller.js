@@ -161,7 +161,7 @@ Question 3 → medium
 Question 4 → medium  
 Question 5 → hard  
 
-Make questions based on the candidate’s role, experience,interviewMode, projects, skills, and resume details.
+Make questions based on the candidate's role, experience,interviewMode, projects, skills, and resume details.
 `
       }
       ,
@@ -195,11 +195,12 @@ Make questions based on the candidate’s role, experience,interviewMode, projec
       });
     }
 
+    // Deduct credits
     user.credits -= 50;
-    await user.save();
+    await User.save(user);
 
     const interview = await Interview.create({
-      userId: user._id,
+      userId: user.id,
       role,
       experience,
       mode,
@@ -212,7 +213,7 @@ Make questions based on the candidate’s role, experience,interviewMode, projec
     })
 
     res.json({
-      interviewId: interview._id,
+      interviewId: interview.id,
       creditsLeft: user.credits,
       userName: user.name,
       questions: interview.questions
@@ -228,31 +229,38 @@ export const submitAnswer = async (req, res) => {
     const { interviewId, questionIndex, answer, timeTaken } = req.body
 
     const interview = await Interview.findById(interviewId)
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
     const question = interview.questions[questionIndex]
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
 
     // If no answer
     if (!answer) {
-      question.score = 0;
-      question.feedback = "You did not submit an answer.";
-      question.answer = "";
-
-      await interview.save();
+      await Interview.updateQuestion(question.id, {
+        score: 0,
+        feedback: "You did not submit an answer.",
+        answer: "",
+      });
 
       return res.json({
-        feedback: question.feedback
+        feedback: "You did not submit an answer."
       });
     }
 
     // If time exceeded
     if (timeTaken > question.timeLimit) {
-      question.score = 0;
-      question.feedback = "Time limit exceeded. Answer not evaluated.";
-      question.answer = answer;
-
-      await interview.save();
+      await Interview.updateQuestion(question.id, {
+        score: 0,
+        feedback: "Time limit exceeded. Answer not evaluated.",
+        answer: answer,
+      });
 
       return res.json({
-        feedback: question.feedback
+        feedback: "Time limit exceeded. Answer not evaluated."
       });
     }
 
@@ -317,13 +325,14 @@ Answer: ${answer}
 
     const parsed = JSON.parse(aiResponse);
 
-    question.answer = answer;
-    question.confidence = parsed.confidence;
-    question.communication = parsed.communication;
-    question.correctness = parsed.correctness;
-    question.score = parsed.finalScore;
-    question.feedback = parsed.feedback;
-    await interview.save();
+    await Interview.updateQuestion(question.id, {
+      answer: answer,
+      confidence: parsed.confidence,
+      communication: parsed.communication,
+      correctness: parsed.correctness,
+      score: parsed.finalScore,
+      feedback: parsed.feedback,
+    });
 
 
     return res.status(200).json({feedback :parsed.feedback})
@@ -372,10 +381,10 @@ export const finishInterview = async (req,res) => {
       ? totalCorrectness / totalQuestions
       : 0;
 
-    interview.finalScore = finalScore;
-    interview.status = "completed";
-
-    await interview.save();
+    await Interview.updateInterview(interviewId, {
+      final_score: finalScore,
+      status: "completed",
+    });
 
     return res.status(200).json({
        finalScore: Number(finalScore.toFixed(1)),
@@ -399,9 +408,7 @@ export const finishInterview = async (req,res) => {
 
 export const getMyInterviews = async (req,res) => {
   try {
-    const interviews = await Interview.find({userId:req.userId})
-    .sort({ createdAt: -1 })
-    .select("role experience mode finalScore status createdAt");
+    const interviews = await Interview.findByUserId(req.userId)
 
     return res.status(200).json(interviews)
 
@@ -443,7 +450,7 @@ export const getInterviewReport = async (req,res) => {
       : 0;
 
        return res.json({
-      finalScore: interview.finalScore,
+      finalScore: interview.final_score,
       confidence: Number(avgConfidence.toFixed(1)),
       communication: Number(avgCommunication.toFixed(1)),
       correctness: Number(avgCorrectness.toFixed(1)),
@@ -454,7 +461,3 @@ export const getInterviewReport = async (req,res) => {
     return res.status(500).json({message:`failed to find currentUser Interview report ${error}`})
   }
 }
-
-
-
-

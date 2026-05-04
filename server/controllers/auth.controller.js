@@ -32,10 +32,10 @@ export const register = async (req, res) => {
             return res.status(400).json({message: "user already exists"})
         }
 
-        let token = await genToken(user._id)
+        let token = await genToken(user.id)
         sendAuthCookie(res, token)
 
-        const safeUser = await User.findById(user._id).select("-password")
+        const safeUser = await User.findByIdExclude(user.id, ["password"])
         return res.status(201).json(safeUser)
 
 
@@ -66,10 +66,10 @@ export const login = async (req, res) => {
             return res.status(401).json({message: "invalid credentials"})
         }
 
-        const token = await genToken(user._id)
+        const token = await genToken(user.id)
         sendAuthCookie(res, token)
 
-        const safeUser = await User.findById(user._id).select("-password")
+        const safeUser = await User.findByIdExclude(user.id, ["password"])
         return res.status(200).json(safeUser)
 
     } catch (error) {

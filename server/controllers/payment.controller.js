@@ -54,7 +54,7 @@ export const verifyPayment = async (req,res) => {
     }
 
      const payment = await Payment.findOne({
-      razorpayOrderId: razorpay_order_id,
+      razorpay_order_id: razorpay_order_id,
     });
 
     if (!payment) {
@@ -67,13 +67,11 @@ export const verifyPayment = async (req,res) => {
 
     // Update payment record
     payment.status = "paid";
-    payment.razorpayPaymentId = razorpay_payment_id;
-    await payment.save();
+    payment.razorpay_payment_id = razorpay_payment_id;
+    await Payment.save(payment);
 
     // Add credits to user
-    const updatedUser = await User.findByIdAndUpdate(payment.userId, {
-      $inc: { credits: payment.credits }
-    },{new:true});
+    const updatedUser = await User.updateCredits(payment.user_id, payment.credits);
 
     res.json({
       success: true,

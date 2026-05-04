@@ -59,7 +59,7 @@ function InterviewHistory() {
                     <div className='grid gap-6'>
                         {interviews.map((item, index) => (
                             <div key={index}
-                            onClick={()=>navigate(`/report/${item._id}`)}
+                            onClick={()=>navigate(`/report/${item.id}`)}
                              className='bg-white p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100'>
                                 <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                                     <div>
