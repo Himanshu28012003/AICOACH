@@ -94,40 +94,36 @@ flowchart TD
 flowchart TD
     A["🌐 User Opens App<br/>localhost:5173"] --> B{Authenticated?}
     
-    B -->|No| C["🔐 Google Login Page"]
-    C --> D["Click: Continue with Google"]
-    D --> E["Firebase Popup Auth"]
-    E --> F["Get: name, email"]
-    F --> G["POST /api/auth/google"]
-    G --> H{User in DB?}
-    H -->|New User| I["Create User + 100 Credits"]
-    H -->|Existing| J["Load User Data"]
-    I --> K["Generate JWT Cookie"]
-    J --> K
-    K --> L["Store User in Redux"]
+    B -->|No| C["🔐 JWT Login Page"]
+    C --> D["Enter email and password"]
+    D --> E["POST /api/auth/login or /api/auth/register"]
+    E --> F{Credentials valid?}
+    F -->|Yes| G["Generate JWT Cookie"]
+    F -->|No| H["Show auth error"]
+    G --> I["Store User in Redux"]
     
-    B -->|Yes| M["✅ User Authenticated"]
-    L --> M
+    B -->|Yes| J["✅ User Authenticated"]
+    I --> J
     
-    M --> N["📖 Home Page"]
-    N --> O["Click: Start Interview"]
-    O --> P["Step 1: Setup<br/>Upload Resume"]
-    P --> Q["POST /api/interview/resume<br/>Extract PDF Text"]
-    Q --> R["AI Analyzes: Role,<br/>Skills, Experience"]
-    R --> S["Step 1 Form"]
-    S --> T["Select Role, Experience,<br/>Interview Mode"]
-    T --> U["POST /api/interview/generate-questions"]
-    U --> V{Credits ≥ 50?}
+    J --> K["📖 Home Page"]
+    K --> L["Click: Start Interview"]
+    L --> M["Step 1: Setup<br/>Upload Resume"]
+    M --> N["POST /api/interview/resume<br/>Extract PDF Text"]
+    N --> O["AI Analyzes: Role,<br/>Skills, Experience"]
+    O --> P["Step 1 Form"]
+    P --> Q["Select Role, Experience,<br/>Interview Mode"]
+    Q --> R["POST /api/interview/generate-questions"]
+    R --> S{Credits ≥ 50?}
     
-    V -->|No| W["💳 Pricing Page"]
-    W --> X["Select Plan"]
-    X --> Y["→ PAYMENT FLOW ←"]
-    Y -->|Success| Z["Credits Added"]
-    Z --> U
+    S -->|No| T["💳 Pricing Page"]
+    T --> U["Select Plan"]
+    U --> V["→ PAYMENT FLOW ←"]
+    V -->|Success| W["Credits Added"]
+    W --> R
     
-    V -->|Yes| AA["✅ Deduct 50 Credits"]
-    AA --> AB["Create Interview + Questions"]
-    AB --> AC["Step 2: Interview<br/>AI Interview Session"]
+    S -->|Yes| X["✅ Deduct 50 Credits"]
+    X --> Y["Create Interview + Questions"]
+    Y --> Z["Step 2: Interview<br/>AI Interview Session"]
     AC --> AD["AI Introduces + Video"]
     AD --> AE["Question 1 of 5"]
     AE --> AF["🎤 User Records Answer"]
