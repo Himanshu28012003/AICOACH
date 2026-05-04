@@ -25,12 +25,14 @@ const envAllowedOrigins = (process.env.CORS_ORIGINS || "")
 
 const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])]
 
+const localhostOriginPattern = /^http:\/\/localhost:\d+$/
+
 const corsOptions = {
     origin: (origin, callback) => {
         // Allow tools/non-browser requests that do not send Origin.
         if (!origin) return callback(null, true)
 
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin) || localhostOriginPattern.test(origin)) {
             return callback(null, true)
         }
 
@@ -42,7 +44,6 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.options("*", cors(corsOptions))
 
 app.use(express.json())
 app.use(cookieParser())
