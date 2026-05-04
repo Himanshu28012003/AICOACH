@@ -11,16 +11,22 @@ import interviewRouter from "./routes/interview.route.js"
 import paymentRouter from "./routes/payment.route.js"
 
 const app = express()
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://aicoach-lh1z.onrender.com"
+]
+
 app.use(cors({
     origin: function(origin, callback) {
-        // Allow requests from localhost on any port (for development)
-        if (!origin || origin.startsWith("http://localhost")) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
+        // allow requests with no origin (e.g., curl, mobile clients)
+        if (!origin) return callback(null, true)
+        // allow localhost (any port) for development
+        if (origin.startsWith("http://localhost")) return callback(null, true)
+        // allow specific allowed origins
+        if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true)
+        return callback(new Error("Not allowed by CORS"))
     },
-    credentials:true
+    credentials: true
 }))
 
 app.use(express.json())
