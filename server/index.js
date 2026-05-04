@@ -11,21 +11,10 @@ import interviewRouter from "./routes/interview.route.js"
 import paymentRouter from "./routes/payment.route.js"
 
 const app = express()
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://aicoach-lh1z.onrender.com"
-]
-
+// TEMPORARY DEBUG: allow all origins to simplify CORS troubleshooting
+// NOTE: Do NOT leave this in production; revert to an allowlist after debugging.
 app.use(cors({
-    origin: function(origin, callback) {
-        // allow requests with no origin (e.g., curl, mobile clients)
-        if (!origin) return callback(null, true)
-        // allow localhost (any port) for development
-        if (origin.startsWith("http://localhost")) return callback(null, true)
-        // allow specific allowed origins
-        if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true)
-        return callback(new Error("Not allowed by CORS"))
-    },
+    origin: true,
     credentials: true
 }))
 
