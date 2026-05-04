@@ -2,12 +2,17 @@ import bcrypt from "bcryptjs"
 import genToken from "../config/token.js"
 import User from "../models/user.model.js"
 
+const isProduction = process.env.NODE_ENV === "production"
+
+const authCookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax"
+}
 
 const sendAuthCookie = (res, token) => {
     res.cookie("token", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "strict",
+        ...authCookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000
     })
 }
@@ -81,9 +86,7 @@ export const login = async (req, res) => {
 export const logOut = async (req,res) => {
     try {
         res.clearCookie("token", {
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict"
+            ...authCookieOptions
         })
         return res.status(200).json({message:"LogOut Successfully"})
     } catch (error) {

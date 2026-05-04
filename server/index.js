@@ -11,12 +11,38 @@ import interviewRouter from "./routes/interview.route.js"
 import paymentRouter from "./routes/payment.route.js"
 
 const app = express()
-// TEMPORARY DEBUG: allow all origins to simplify CORS troubleshooting
-// NOTE: Do NOT leave this in production; revert to an allowlist after debugging.
-app.use(cors({
-    origin: true,
-    credentials: true
-}))
+
+const defaultAllowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://aicoach-lh1z.onrender.com"
+]
+
+const envAllowedOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
+const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])]
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow tools/non-browser requests that do not send Origin.
+        if (!origin) return callback(null, true)
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true)
+        }
+
+        return callback(new Error("Not allowed by CORS"))
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}
+
+app.use(cors(corsOptions))
+app.options("*", cors(corsOptions))
 
 app.use(express.json())
 app.use(cookieParser())
